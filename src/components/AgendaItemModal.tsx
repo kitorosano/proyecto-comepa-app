@@ -27,14 +27,21 @@ import {
   OrderRealizadoValues,
 } from '../contants/models';
 import {useNavigation} from '@react-navigation/native';
+import axiosClient from '../utils/axiosClient';
 
 type Props = {
   item: OrdenesFisioterapeuta | null;
   modalVisible: boolean;
   closeModal: () => void;
+  handleRefresh: () => void;
 };
 
-const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
+const AgendaItemModal = ({
+  item,
+  modalVisible,
+  closeModal,
+  handleRefresh,
+}: Props) => {
   const token = useAppSelector(state => state.accessToken);
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
@@ -84,7 +91,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
   const handleConfirmUpdateRealizacion = async (estado: OrdenRealizado) => {
     Alert.alert(
       'Estado de la orden',
-      `¿Desear actualizar el nuevo estado de la orden a ${OrderRealizadoValues[estado]}?`,
+      `¿Desear actualizar el nuevo estado de la orden a ${OrderRealizadoValues[estado]}?\n\nNOTA: Una vez guardado no se podrá volver a PENDIENTE.`,
       [
         {
           text: 'Cancelar',
@@ -101,7 +108,6 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
   };
 
   const handleUpdateRealizacion = async (estado: OrdenRealizado) => {
-    console.log(estado);
     setRealizado(estado);
 
     try {
@@ -115,19 +121,20 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
       );
 
       const payload = {realizacion: estado};
-      await fetchClient.post(
+
+      const {data} = await axiosClient.put(
         `reserva-rest/modificar-orden-de-servicio?idOrdenServicio=${item.idOrdenServicio}`,
         payload,
         {
           headers: {
             Authorization: 'Bearer ' + token,
-            'X-CSRF-Token':
-              '5VbY2rTkOOnIxumVA_5UjGMgz1u3PyRlKZwH1UltIXqfDuiU071hhqK1xMx5zzrOUEidGfBQUDNE0DS2fgFTMQ==',
+            'X-CSRF-Token': csrftoken,
           },
         },
       );
 
-      dispatch(setMessage('Se ha guardado el estado correctamente'));
+      dispatch(setMessage(data.mensaje));
+      handleRefresh();
     } catch (error: any) {
       console.log(error.message);
       // dispatch(setMessage('Ha ocurrido un error'));
@@ -154,7 +161,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
       realizacion: OrdenRealizado.REALIZADA,
     };
     try {
-      const {mensaje, data} = await fetchClient.put(
+      const {data} = await axiosClient.put(
         `reserva-rest/modificar-orden-de-servicio?idOrdenServicio=${item.idOrdenServicio}`,
         payload,
         {
@@ -166,7 +173,9 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
       );
 
       setEditEvaluacion(false);
-      dispatch(setMessage(mensaje));
+      dispatch(setMessage(data.mensaje));
+      // setRealizado(payload.realizacion);
+      handleRefresh();
     } catch (error: any) {
       dispatch(setMessage(error.message));
     } finally {

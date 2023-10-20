@@ -46,7 +46,6 @@ const Agenda = ({date}: Props) => {
   const [ordenes, setOrdenes] = useState<OrdenServicioPorFecha[] | any>([]);
 
   useEffect(() => {
-    console.log(date);
     if (date && idFisioterapeuta && accesstoken) {
       obtenerOrdenes(idFisioterapeuta, accesstoken, date);
     }
@@ -69,7 +68,6 @@ const Agenda = ({date}: Props) => {
           headers: {Authorization: 'Bearer ' + _accesstoken},
         },
       );
-      console.log(data);
 
       const mappedOrdenes: OrdenServicioPorFecha[] = Object.entries(data).map(
         ([key, value]) => ({
@@ -105,6 +103,11 @@ const Agenda = ({date}: Props) => {
     setModalVisible(false);
   };
 
+  const handleRefresh = () => {
+    if (!idFisioterapeuta || !accesstoken || !date) return;
+    obtenerOrdenes(idFisioterapeuta, accesstoken, date);
+  };
+
   return (
     <CalendarProvider date={dateToStringYYYYMMDD(date)} disabledOpacity={0.6}>
       <AgendaList
@@ -119,6 +122,7 @@ const Agenda = ({date}: Props) => {
           modalVisible={!!modalVisible}
           item={selectedAgendaItem}
           closeModal={handleCloseModal}
+          handleRefresh={handleRefresh}
         />
       )}
 
