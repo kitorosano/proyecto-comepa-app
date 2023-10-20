@@ -8,15 +8,24 @@ import {
   Image,
   ScrollView,
   TextInput,
+  Alert,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {THEME_COLORS} from '../contants/theme';
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {addDateTimeDuration, formatTimeString} from '../utils/index';
+import {
+  addDateTimeDuration,
+  formatPrettyDate2,
+  formatTimeString,
+} from '../utils/index';
 import fetchClient from '../utils/fetchClient';
 import {useAppDispatch, useAppSelector} from '../redux/hooks';
 import {setMessage, setSelectedPaciente} from '../redux/appSlice';
-import {OrdenRealizado, OrdenesFisioterapeuta} from '../contants/models';
+import {
+  OrdenRealizado,
+  OrdenesFisioterapeuta,
+  OrderRealizadoValues,
+} from '../contants/models';
 import {useNavigation} from '@react-navigation/native';
 
 type Props = {
@@ -29,16 +38,20 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
   const token = useAppSelector(state => state.accessToken);
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
+  const [observacion, setObservacion] = useState<string>();
   const [editEvaluacion, setEditEvaluacion] = useState(false);
   const [realizado, setRealizado] = useState<OrdenRealizado>();
 
   useEffect(() => {
-    setRealizado(item?.realizacion);
-  }, [item?.realizacion]);
+    if (item) {
+      setRealizado(item.realizacion);
+      setObservacion(item.evolucion || '');
+    }
+  }, [item]);
 
   if (!modalVisible || !item) return <></>;
 
-  const modalDateTime = `Miercoles, 27 set. • ${formatTimeString(
+  const modalDateTime = `${formatPrettyDate2(item.fecha)} • ${formatTimeString(
     item.hora,
   )} - ${addDateTimeDuration(item.hora, item.duracion)}`;
 
@@ -66,6 +79,25 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
   const handleCloseModal = () => {
     setEditEvaluacion(false);
     closeModal();
+  };
+
+  const handleConfirmUpdateRealizacion = async (estado: OrdenRealizado) => {
+    Alert.alert(
+      'Estado de la orden',
+      `¿Desear actualizar el nuevo estado de la orden a ${OrderRealizadoValues[estado]}?`,
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmar',
+          onPress: () => handleUpdateRealizacion(estado),
+        },
+      ],
+      {cancelable: false},
+    );
   };
 
   const handleUpdateRealizacion = async (estado: OrdenRealizado) => {
@@ -103,7 +135,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
   };
 
   const handleUpdateEvaluacion = async () => {
-    if (!item.evolucion)
+    if (!observacion)
       return dispatch(setMessage('Todos los campos son requeridos'));
 
     // setLoading(true);
@@ -118,7 +150,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
     );
 
     const payload = {
-      evolucion: item.evolucion,
+      evolucion: observacion,
       realizacion: OrdenRealizado.REALIZADA,
     };
     try {
@@ -205,7 +237,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
               <View style={styles.realizacionChips}>
                 <TouchableOpacity
                   onPress={() =>
-                    handleUpdateRealizacion(OrdenRealizado.PENDIENTE)
+                    handleConfirmUpdateRealizacion(OrdenRealizado.PENDIENTE)
                   }
                   style={styleChipPendiente}>
                   <Text style={styleChipTextPendiente}>Pendiente</Text>
@@ -213,7 +245,7 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
 
                 <TouchableOpacity
                   onPress={() =>
-                    handleUpdateRealizacion(OrdenRealizado.REALIZADA)
+                    handleConfirmUpdateRealizacion(OrdenRealizado.REALIZADA)
                   }
                   style={styleChipRealizado}>
                   <Text style={styleChipTextRealizado}>Realizado</Text>
@@ -221,14 +253,16 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
 
                 <TouchableOpacity
                   onPress={() =>
-                    handleUpdateRealizacion(OrdenRealizado.NO_REALIZADA)
+                    handleConfirmUpdateRealizacion(OrdenRealizado.NO_REALIZADA)
                   }
                   style={styleChipNoRealizado}>
                   <Text style={styleChipTextNoRealizado}>No Realizado</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => handleUpdateRealizacion(OrdenRealizado.FALTO)}
+                  onPress={() =>
+                    handleConfirmUpdateRealizacion(OrdenRealizado.FALTO)
+                  }
                   style={styleChipFalto}>
                   <Text style={styleChipTextFalto}>Faltó</Text>
                 </TouchableOpacity>
@@ -310,7 +344,8 @@ const AgendaItemModal = ({item, modalVisible, closeModal}: Props) => {
                 numberOfLines={4}
                 placeholder="Agregar una observacion a la cita..."
                 placeholderTextColor={THEME_COLORS.gray}
-                value={item.evolucion || ''}
+                value={observacion}
+                onChangeText={text => setObservacion(text)}
                 onFocus={() => setEditEvaluacion(true)}
               />
             </View>

@@ -5,14 +5,10 @@ import {THEME_COLORS} from '../contants/theme';
 import {Linking} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useAppDispatch, useAppSelector} from '../redux/hooks';
-import {
-  Direccion,
-  OrdenServicioPorFecha,
-  OrdenesFisioterapeuta,
-} from '../contants/models';
-import {getWeekDay} from '../utils';
+import {Direccion, PacienteConDirecciones} from '../contants/models';
 import fetchClient from '../utils/fetchClient';
 import {setMessage} from '../redux/appSlice';
+import Loading from '../components/Loading';
 
 const PatientDetailsScreen = (): ReactElement => {
   const [loading, setLoading] = useState(false);
@@ -20,7 +16,7 @@ const PatientDetailsScreen = (): ReactElement => {
   const navigation = useNavigation();
   const accessToken = useAppSelector(state => state.accessToken);
   const selectedPaciente = useAppSelector(state => state.selectedPaciente);
-  const [paciente, setPaciente] = useState(null);
+  const [paciente, setPaciente] = useState<PacienteConDirecciones | null>(null);
 
   useEffect(() => {
     if (selectedPaciente && accessToken) {
@@ -71,7 +67,7 @@ const PatientDetailsScreen = (): ReactElement => {
       [
         {
           text: 'Cancelar',
-          onPress: () => console.log('Cancel Pressed'),
+          onPress: () => {},
           style: 'cancel',
         },
         {
@@ -81,15 +77,6 @@ const PatientDetailsScreen = (): ReactElement => {
       ],
       {cancelable: false},
     );
-  };
-
-  const handleVerCitasPaciente = () => {
-    navigation.navigate('Home', {
-      screen: 'PatientsStack',
-      params: {
-        screen: 'PatientOrders',
-      },
-    });
   };
 
   return (
@@ -132,35 +119,38 @@ const PatientDetailsScreen = (): ReactElement => {
           </Text>
         </View>
 
-        {/* VER CITAS */}
-        {/* <View style={styles.detailsSectionWithoutIcon}>
-          <TouchableOpacity
-            style={styles.launchIcon}
-            onPress={handleVerCitasPaciente}>
-            <Text style={styles.verCitasText}>Ver citas del paciente </Text>
-
-            <Icons name="launch" size={15} color={THEME_COLORS.tertiary} />
-          </TouchableOpacity>
-        </View> */}
-
         {/* DIRECCIONES */}
-        <TouchableOpacity
-          onPress={() => handleClickDireccion(paciente?.direcciones[0])}
-          style={styles.detailsSection}>
-          <Icons
-            style={styles.detailsIcon}
-            name="home-outline"
-            size={25}
-            color={THEME_COLORS.gray}
-          />
-          <Text style={styles.detailsText}>
-            {paciente?.direcciones[0].calle} {paciente?.direcciones[0].numero}
-            {', '}
-            {paciente?.direcciones[0].ciudad}
-            {', '}
-            {paciente?.direcciones[0].pais}
-          </Text>
-        </TouchableOpacity>
+        {paciente?.direcciones && paciente.direcciones.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => handleClickDireccion(paciente?.direcciones[0])}
+            style={styles.detailsSection}>
+            <Icons
+              style={styles.detailsIcon}
+              name="home-outline"
+              size={25}
+              color={THEME_COLORS.gray}
+            />
+            <Text style={styles.detailsText}>
+              {paciente?.direcciones[0].calle} {paciente?.direcciones[0].numero}
+              {', '}
+              {paciente?.direcciones[0].ciudad}
+              {', '}
+              {paciente?.direcciones[0].pais}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.detailsSection}>
+            <Icons
+              style={styles.detailsIcon}
+              name="home-outline"
+              size={25}
+              color={THEME_COLORS.gray}
+            />
+            <Text style={styles.detailsText}>
+              No existe registro de direccion
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {paciente?.direcciones.slice(1).map(direccion => (
           <TouchableOpacity
@@ -177,6 +167,12 @@ const PatientDetailsScreen = (): ReactElement => {
           </TouchableOpacity>
         ))}
       </View>
+
+      {loading && (
+        <View style={styles.loadingView}>
+          <Loading loading={loading} />
+        </View>
+      )}
     </View>
   );
 };
@@ -277,6 +273,19 @@ const styles = StyleSheet.create({
   verCitasText: {
     color: THEME_COLORS.tertiary,
     fontSize: 16,
+  },
+
+  loadingView: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: THEME_COLORS.white,
+    opacity: 0.3,
   },
 });
 

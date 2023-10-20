@@ -84,7 +84,7 @@ export type OrdenServicio = {
   reserva: Reserva | null;
   idFisioterapeuta: string | null;
   evolucion: string | null;
-  realizacion: string | null;
+  realizacion: OrdenRealizado;
 };
 
 export type OrdenesFisioterapeuta = {

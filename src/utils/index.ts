@@ -86,3 +86,72 @@ export const addDateTimeDuration = (datetime: string, duration: string) => {
 
   return format(newDate, 'HH:mm', {locale});
 };
+
+// formats a date YYYY-MM-DD to DDDD, DD MMMM
+export const formatPrettyDate = (date: string) => {
+  const year = Number(date.split('-')[0]);
+  const month = Number(date.split('-')[1]) - 1;
+  const day = Number(date.split('-')[2]);
+  const dateObj = new Date(year, month, day);
+
+  const weekday = dateObj.getDay();
+  return `${dayNames[weekday]}, ${day} de ${monthNames[month]}`;
+};
+
+// formats a date YYYY-MM-DD to DDDD, DD MMM
+export const formatPrettyDate2 = (date: string) => {
+  const year = Number(date.split('-')[0]);
+  const month = Number(date.split('-')[1]) - 1;
+  const day = Number(date.split('-')[2]);
+  const dateObj = new Date(year, month, day);
+
+  const weekday = dateObj.getDay();
+  return `${dayNames[weekday]}, ${day} ${monthNamesShort[month]}`;
+};
+
+export const monthNames = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Setiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
+export const monthNamesShort = [
+  'Ene.',
+  'Feb.',
+  'Mar.',
+  'Abr.',
+  'May.',
+  'Jun.',
+  'Jul.',
+  'Ago.',
+  'Set.',
+  'Oct.',
+  'Nov.',
+  'Dic.',
+];
+export const dayNames = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+];
+export const dayNamesShort = [
+  'Dom.',
+  'Lun.',
+  'Mar.',
+  'Mié.',
+  'Jue.',
+  'Vie.',
+  'Sáb.',
+];

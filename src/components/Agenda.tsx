@@ -5,7 +5,7 @@ import {
   CalendarProvider,
   LocaleConfig,
 } from 'react-native-calendars';
-import {dateToStringYYYYMMDD, getWeekDay} from '../utils';
+import {dateToStringYYYYMMDD, formatPrettyDate, getWeekDay} from '../utils';
 import {THEME_COLORS} from '../contants/theme';
 import AgendaItem from './AgendaItem';
 import AgendaItemModal from './AgendaItemModal';
@@ -14,44 +14,18 @@ import fetchClient from '../utils/fetchClient';
 import {setMessage} from '../redux/appSlice';
 import {OrdenServicioPorFecha, OrdenesFisioterapeuta} from '../contants/models';
 import Loading from './Loading';
+import {
+  monthNames,
+  monthNamesShort,
+  dayNames,
+  dayNamesShort,
+} from '../utils/index';
 
 LocaleConfig.locales['es'] = {
-  monthNames: [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Agosto',
-    'Setiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ],
-  monthNamesShort: [
-    'Ene.',
-    'Feb.',
-    'Mar.',
-    'Abr.',
-    'May.',
-    'Jun.',
-    'Ago.',
-    'Set.',
-    'Oct.',
-    'Nov.',
-    'Dic.',
-  ],
-  dayNames: [
-    'Domingo',
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado',
-  ],
-  dayNamesShort: ['Dom.', 'Lun.', 'Mar.', 'Mié.', 'Jue.', 'Vie.', 'Sáb.'],
+  monthNames,
+  monthNamesShort,
+  dayNames,
+  dayNamesShort,
   today: 'Hoy',
 };
 LocaleConfig.defaultLocale = 'es';
@@ -95,7 +69,7 @@ const Agenda = ({date}: Props) => {
           headers: {Authorization: 'Bearer ' + _accesstoken},
         },
       );
-      console.log(_idFisioterapeuta);
+      console.log(data);
 
       const mappedOrdenes: OrdenServicioPorFecha[] = Object.entries(data).map(
         ([key, value]) => ({
@@ -132,13 +106,10 @@ const Agenda = ({date}: Props) => {
   };
 
   return (
-    <CalendarProvider
-      date={dateToStringYYYYMMDD(date)}
-      showTodayButton
-      disabledOpacity={0.6}>
+    <CalendarProvider date={dateToStringYYYYMMDD(date)} disabledOpacity={0.6}>
       <AgendaList
+        dayFormatter={_date => formatPrettyDate(_date)}
         sections={ordenes}
-        dayFormat="dddd, MMMM d"
         renderItem={renderItem}
         sectionStyle={styles.section}
       />
